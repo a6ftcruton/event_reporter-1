@@ -8,7 +8,7 @@ class CLI
     @reader = reader
     @writer = writer
     @processor = processor
-    writer._print "Please first load a csv file upon which to build a queue.\n"
+    writer._puts "Please first load a csv file upon which to build a queue.\n"
   end
 
   def run
@@ -27,23 +27,35 @@ class CLI
   end
 
   def help(command_parts)
-   help = command_parts[:part3] ? processor.help(command_parts[:part2]  + command_parts[:part3]) : processor.help(command_parts[:part2])
-   writer._print(help)
+   result = command_parts[:part3] ? processor.help(command_parts[:part2] + ' ' + command_parts[:part3]) : processor.help(command_parts[:part2])
+   writer._puts result
    reset
   end
 
   def queue(command_parts)
-    reset unless command_parts[:part2]
-    command_parts[:part3] ? processor.send('queue' + '_' + command_parts[:part2], command_parts[:part3]) : processor.send('queue' + '_' + command_parts[:part2])
+    command_parts[:part2] ? execute_queue(command_parts) : writer.invalid_message
+    reset
+  end
+
+  def execute_queue(command_parts)
+    result = command_parts[:part3] ? processor.send('queue_' + command_parts[:part2], command_parts[:part3]) : processor.send('queue_' + command_parts[:part2])
+    writer._puts result
   end
 
   def load(command_parts)
-    command_parts[:part2] ? processor.repository_manager.load_entries(command_parts[:part_2]) : processor.repository_manager.load_entries
+    command_parts[:part2] ? processor.load(command_parts[:part2]) : processor.load
+    writer._puts "Load Successful\n"
+    reset
   end
 
   def find(command_parts)
-    reset unless command_parts[:part2] && command_parts[:part3]
-    processor.find(command_parts[:part2], command_parts[:part3])
+    command_parts[:part2] && command_parts[:part3] ? execute_find(command_parts) : writer.invalid_message
+    reset
+  end
+
+  def execute_find(command_parts)
+    result = processor.find(command_parts[:part2], command_parts[:part3])
+    writer._puts result
   end
 
   def quit(command_parts)
@@ -63,6 +75,9 @@ class CLI
       parts = command_parser.match(command)
       command_parts = { part1: parts['part1'], part2: parts['part2'], part3: parts['part3'] }
       command_parts.delete_if { |k,v| v.empty? }
+                   .each_value { |v| v.strip! }
+      command_parts[:part2].tr!(' ', '_') if command_parts[:part2]
+      command_parts
     end
 
     def valid_command?(command)
@@ -70,7 +85,8 @@ class CLI
     end
 
     def command_parser
-      /^(?<part1>\w+)\s*(?<part2>\w*\s*(by|to)?)\s*(?<part3>\w*\s*(by|to)?)/
+      /^(?<part1>\w+)\s*(?<part2>\w*\.?\w*\s*(by|to)?)\s*(?<part3>.*)/
+      # use global vars instead?
     end
     
     def available_commands
@@ -86,16 +102,16 @@ class CLI
       @output_stream = output_stream
     end
 
-    def _print(message)
-      output_stream.print message
+    def _puts(message)
+      output_stream.puts message
     end
 
     def prompt
-      _print '>>'.colorize(:cyan)
+      print ">> ".colorize(:cyan)
     end
 
     def invalid_message
-      _print "Invalid command or use of command. Enter 'help' for a list of valid commands.\n".colorize(:magenta)
+      _puts "Invalid command or use of command. Enter 'help' for a list of valid commands.".colorize(:magenta)
     end
 
     private

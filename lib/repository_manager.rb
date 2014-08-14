@@ -11,22 +11,22 @@ class RepositoryManager
     new(rows)
   end
 
-  # def initialize(entries)
-  def initialize
-    @entries = []
-    # @entries = entries
+  def initialize(entries)
+    @entries = entries
     @queue = []
   end
 
   def find(attribute, criteria)
-    self.queue = entries.select { |entry| entry.send(attribute) =~ /\s*#{criteria}\s*/i }
+    self.queue = entries.select { |entry| entry.send(attribute) =~ /^#{criteria}$/i }
+    "The queue has been populated by #{attribute} of #{criteria.upcase}\n"
   end
 
   private
 
-  def parse_csv(file)
-    file_path = File.join('./data', file)
-    data = CSV.open(file_path, headers: true, header_converters: :symbol)
+  def self.parse_csv(file)
+    path = File.realdirpath(__FILE__)
+    directory = File.dirname(path)
+    data = CSV.open(directory + '/data/' + file, headers: true, header_converters: :symbol)
   end
 
 end
