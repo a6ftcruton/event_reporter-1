@@ -1,13 +1,13 @@
+require 'help_message'
 require 'repository_manager'
 require 'entry'
 
 class CommandProcessor
-
   attr_accessor :repository_manager
 
-  # def initialize(repository_manager = RepositoryManager.load_entries)
-  def initialize(repository_manager = RepositoryManager.new)
+  include HelpMessage
 
+  def initialize(repository_manager = RepositoryManager.new)
     @repository_manager = repository_manager
   end
 

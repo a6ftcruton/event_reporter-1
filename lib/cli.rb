@@ -1,10 +1,8 @@
-require 'help_message'
+require 'colorize'
 require 'command_processor'
 
 class CLI
   attr_reader :reader, :writer, :processor
-  
-  include HelpMessage
 
   def initialize(reader = Reader.new($stdin), writer = Writer.new($stdout), processor = CommandProcessor.new)
     @reader = reader
@@ -14,42 +12,41 @@ class CLI
   end
 
   def run
-    writer._print prompt
+    writer.prompt
     command_parts = get_command  
-    command_parts ? send(command_parts.part_1, command_parts) : rerun 
+    send(command_parts[:part1], command_parts) if command_parts
   end
 
-  def rerun
-    writer._print invalid_message
-    run
+  alias_method :reset, :run
+
+  def get_command
+    command_parts = reader.read_command
+    return command_parts if command_parts
+    writer.invalid_message
+    reset
   end
 
   def help(command_parts)
-    writer._print(command_parts.part3 ? processor.help(command_parts.part2 + ' ' + command_parts.part3) : processor.help(command_parts.part2))
+   help = command_parts[:part3] ? processor.help(command_parts[:part2]  + command_parts[:part3]) : processor.help(command_parts[:part2])
+   writer._print(help)
+   reset
   end
 
   def queue(command_parts)
-    rerun unless command_parts.part2
-    command_parts.part3 ? processor.send('queue' + '_' + command_parts.part2, command_parts.part3) : processor.send('queue' + '_' + command_parts.part2) 
+    reset unless command_parts[:part2]
+    command_parts[:part3] ? processor.send('queue' + '_' + command_parts[:part2], command_parts[:part3]) : processor.send('queue' + '_' + command_parts[:part2])
   end
 
   def load(command_parts)
-    command_parts.part2 ? processor.repository_manager.load_entries(command_parts.part_2) : processor.repository_manager.load_entries
+    command_parts[:part2] ? processor.repository_manager.load_entries(command_parts[:part_2]) : processor.repository_manager.load_entries
   end
 
   def find(command_parts)
-    rerun unless command_parts.part2 && command_parts.part3    
-    processor.find(command_parts.part2, command_parts.part3)
+    reset unless command_parts[:part2] && command_parts[:part3]
+    processor.find(command_parts[:part2], command_parts[:part3])
   end
 
   def quit(command_parts)
-  end
-  
-  def get_command
-    command = reader.read_command
-    return command if command 
-    writer._print invalid_message 
-    get_command
   end
   
   class Reader
@@ -62,12 +59,10 @@ class CLI
       parse_command(command) if valid_command?(command)
     end
 
-    CommandParts = Struct.new(:part1, :part2, :part3)
     def parse_command(command)
-      command.match(command_parser)
-      part2 = part2.empty? ? nil : part2.tr(' ', '_') 
-      part3 = nil if part3.empty?
-      CommandParts.new(part1, part2, part3)
+      parts = command_parser.match(command)
+      command_parts = { part1: parts['part1'], part2: parts['part2'], part3: parts['part3'] }
+      command_parts.delete_if { |k,v| v.empty? }
     end
 
     def valid_command?(command)
@@ -75,14 +70,7 @@ class CLI
     end
 
     def command_parser
-      parser = /
-               ^
-               (?<part1>\w+)
-               \s*
-               (?<part2>\w*\s*(by|to)?)
-               \s*
-               (?<part3>\w*\s*(by|to)?)
-               /
+      /^(?<part1>\w+)\s*(?<part2>\w*\s*(by|to)?)\s*(?<part3>\w*\s*(by|to)?)/
     end
     
     def available_commands
@@ -103,11 +91,11 @@ class CLI
     end
 
     def prompt
-      '>>'
+      _print '>>'.colorize(:cyan)
     end
 
     def invalid_message
-      "Invalid command or use of command. Enter 'help' for a list of valid commands."
+      _print "Invalid command or use of command. Enter 'help' for a list of valid commands.\n".colorize(:magenta)
     end
 
     private
