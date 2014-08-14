@@ -13,7 +13,7 @@ class CLI
 
   def run
     writer.prompt
-    command_parts = get_command  
+    command_parts = get_command
     send(command_parts[:part1], command_parts) if command_parts
   end
 
@@ -60,7 +60,7 @@ class CLI
 
   def quit(command_parts)
   end
-  
+
   class Reader
     def initialize(input_stream)
       @input_stream = input_stream
@@ -88,7 +88,7 @@ class CLI
       /^(?<part1>\w+)\s*(?<part2>\w*\.?\w*\s*(by|to)?)\s*(?<part3>.*)/
       # use global vars instead?
     end
-    
+
     def available_commands
       ['help', 'quit', 'load', 'queue count', 'queue clear', 'queue print', 'queue print by', 'queue save to', 'find']
     end

@@ -1,3 +1,5 @@
+require 'simplecov'
+SimpleCov.start
 require './test/test_helper'
 require 'cli'
 
@@ -14,8 +16,8 @@ class CLI_Test < Minitest::Test
 end
 
 class MockReader < CLI::Reader
-  attr_reader :times_read, 
-              :command_responses, 
+  attr_reader :times_read,
+              :command_responses,
 
   def initialize
     @times_read        = 0
@@ -59,5 +61,3 @@ class MockProcessor
     methods_called << method
   end
 end
-
-

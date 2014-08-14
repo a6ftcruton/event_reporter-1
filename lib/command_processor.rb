@@ -13,17 +13,24 @@ class CommandProcessor
 
   def load(file='event_attendees.csv')
     self.repository_manager = RepositoryManager.load_entries(file)
-  end 
+  end
 
   def queue_print
-    if repository_manager 
-      headers  
-      repository_manager.queue.map { |row| entry_format(row) } 
+    if repository_manager
+      headers
+      repository_manager.queue.map { |row| entry_format(row) }
     end
   end
 
   def headers
-    "LAST NAME".ljust(24, " ") + "FIRST NAME".ljust(24, " ") + "EMAIL".ljust(24, " ") + "ZIPCODE".ljust(12, " ") + "CITY".ljust(24, " ") + "STATE".ljust(20, " ") + "ADDRESS".ljust(28, " ") + "PHONE".ljust(18, " ")
+    "LAST NAME".ljust(24, " ") +
+    "FIRST NAME".ljust(24, " ") +
+    "EMAIL".ljust(24, " ") +
+    "ZIPCODE".ljust(12, " ") +
+    "CITY".ljust(24, " ") +
+    "STATE".ljust(20, " ") +
+    "ADDRESS".ljust(28, " ") +
+    "PHONE".ljust(18, " ")
   end
 
   def queue_print_by(field)
